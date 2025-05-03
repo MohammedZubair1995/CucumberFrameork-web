@@ -64,6 +64,8 @@ public class MyHook {
             });
 		}
 		
+		Allure.addAttachment("Browser Launched", "text/plain",browser );
+		Allure.addAttachment("Browser launched in headless mode", "text/plain",headless.toString() );
 		driver = BrowserFactory.createDriver(browser, headless);
 		driver.manage().window().maximize();
 		driver.manage().deleteAllCookies();
