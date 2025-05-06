@@ -28,12 +28,21 @@ import io.qameta.allure.model.Parameter;
 public class MyHook {
 	
 	private static final String CONFIG_FILE_PATH = System.getProperty("user.dir") + "/src/test/resources/config.properties";
-    private static Properties properties;
+    private static Properties properties = new Properties();
     private static final String xpath_file_path = System.getProperty("user.dir") + "/src/test/resources/xpath.properties";
     private static Properties xpaths = new Properties();
 
-    static {
-        properties = new Properties();
+    
+	
+	
+	WebDriver driver;
+	private String browser = properties.getProperty("browser");
+	private Boolean headless = Boolean.parseBoolean(properties.getProperty("headless"));
+	
+	@Before(order =2)
+	public void setUp() throws IOException {
+
+		properties = new Properties();
         try {
         	
             properties.load(new FileInputStream(CONFIG_FILE_PATH));
@@ -48,16 +57,8 @@ public class MyHook {
             });
         	
         }
-    }
-	
-	
-	WebDriver driver;
-	private String browser = properties.getProperty("browser");
-	private Boolean headless = Boolean.parseBoolean(properties.getProperty("headless"));
-	
-	@Before(order =2)
-	public void setUp() throws IOException {
-
+		
+		
 		try {
 			xpaths.load(new FileInputStream(xpath_file_path));
 		} catch (FileNotFoundException e) {
@@ -118,6 +119,10 @@ public class MyHook {
 	
 	public static Properties getXpaths() {
 		return xpaths;
+	}
+	
+	public static Properties getProperties() {
+		return properties;
 	}
 
 	@After
