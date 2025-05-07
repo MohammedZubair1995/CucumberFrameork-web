@@ -1,9 +1,11 @@
 package utils;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,41 +38,15 @@ public class MyHook {
 	
 	
 	WebDriver driver;
-	private String browser = properties.getProperty("browser");
-	private Boolean headless = Boolean.parseBoolean(properties.getProperty("headless"));
+	private String browser;
+	private Boolean headless;
 	
 	@Before(order =2)
 	public void setUp() throws IOException {
 
-		properties = new Properties();
-        try {
-        	
-            properties.load(new FileInputStream(CONFIG_FILE_PATH));
-        } catch (IOException e) {
-        	
-        	String errorMessage = "Config file not found "+CONFIG_FILE_PATH;
-			Allure.description(errorMessage );
-            Allure.addAttachment("Configuration Failure", "text/plain", errorMessage);
-            
-            Allure.step("Configuration Failed", () -> {
-                throw new AssertionError(errorMessage);
-            });
-        	
-        }
-		
-		
-		try {
-			xpaths.load(new FileInputStream(xpath_file_path));
-		} catch (FileNotFoundException e) {
-			String errorMessage = "xpath file not found "+xpath_file_path;
-			Allure.description(errorMessage );
-            Allure.addAttachment("Configuration Failure", "text/plain", errorMessage);
-            
-            Allure.step("Configuration Failed", () -> {
-                throw new AssertionError(errorMessage);
-            });
-		}
-		
+       
+		browser=properties.getProperty("browser");
+		headless=Boolean.parseBoolean(properties.getProperty("headless"));
 //		Allure.parameter("Browser", browser);
 //		Allure.parameter("Headless mode", headless.toString());
 //		Allure.link(properties.getProperty("url"));
@@ -93,10 +69,40 @@ public class MyHook {
 	
 	 @Before(order =1)
 	    public void connection() throws IOException {
+		 
+		 try {
+	        	
+	            properties.load(new FileInputStream(CONFIG_FILE_PATH));
+	        } catch (IOException e) {
+	        	
+	        	String errorMessage = "Config file not found "+CONFIG_FILE_PATH;
+				Allure.description(errorMessage );
+	            Allure.addAttachment("Configuration Failure", "text/plain", errorMessage);
+	            
+	            Allure.step("Configuration Failed", () -> {
+	                throw new AssertionError(errorMessage);
+	            });
+	        	
+	        }
+			
+			
+			try {
+				xpaths.load(new FileInputStream(xpath_file_path));
+			} catch (FileNotFoundException e) {
+				String errorMessage = "xpath file not found "+xpath_file_path;
+				Allure.description(errorMessage );
+	            Allure.addAttachment("Configuration Failure", "text/plain", errorMessage);
+	            
+	            Allure.step("Configuration Failed", () -> {
+	                throw new AssertionError(errorMessage);
+	            });
+			}
+		 
 
-	    	URL link = new URL(properties.getProperty("url"));
+		 URL link = URI.create(properties.getProperty("url")).toURL(); 
+				 
 	    	HttpURLConnection connect = (HttpURLConnection) link.openConnection();
-	    	connect.connect();
+	    	//connect.connect();
 	    	int responsecode = connect.getResponseCode();
 	    	String responsemessage = connect.getResponseMessage();
 	    	if (responsecode>=400) {
@@ -144,14 +150,15 @@ public class MyHook {
 	
 	@AfterAll
     public static void generateAllureReport() {
-        try {
-            // Ensure the allure-results directory exists
-            Path resultsDir = Paths.get("allure-results");
-            if (!Files.exists(resultsDir)) {
-                Files.createDirectories(resultsDir);
-            }
+//        try {
+//            // Ensure the allure-results directory exists
+//        	 File directory = new File(System.getProperty("user.dir") + "/target/allure-results");
+//             if (!directory.exists()) {
+//                 directory.mkdirs();
+//             }
 
             // Generate Allure report
+		try {
             ProcessBuilder processBuilder = new ProcessBuilder();
             String command;
             
