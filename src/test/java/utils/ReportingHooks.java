@@ -11,7 +11,7 @@ public class ReportingHooks {
 	private static final ThreadLocal<Map<String, String>> PARAMETERS = 
             ThreadLocal.withInitial(LinkedHashMap::new);
         
-    @AfterStep(order=2)
+    @Before(order=3)
     public void captureScenarioParameters(Scenario scenario) {
         PARAMETERS.get().clear();
         

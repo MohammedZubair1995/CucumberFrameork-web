@@ -74,8 +74,8 @@
     <version>3.5.3</version>
     <configuration>
     <suiteXmlFiles>
-            <suiteXmlFile>testng.xml</suiteXmlFile>
-          </suiteXmlFiles>
+        <suiteXmlFile>${project.build.testOutputDirectory}/tests/testng.xml</suiteXmlFile>
+    </suiteXmlFiles>
         <argLine>
             -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
         </argLine>
