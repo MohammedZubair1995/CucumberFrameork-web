@@ -1,30 +1,21 @@
 package utils;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
-
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-
 import io.cucumber.java.After;
-import io.cucumber.java.AfterAll;
 import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.qameta.allure.Allure;
-import io.qameta.allure.model.Link;
-import io.qameta.allure.model.Parameter;
 
 
 public class MyHook {
@@ -131,7 +122,7 @@ public class MyHook {
 		return properties;
 	}
 
-	@After
+	@After(order=1)
 	public void tearDown() {
 		if (driver != null) {
             driver.quit();
@@ -139,50 +130,14 @@ public class MyHook {
 		
 	}
 	
-	@AfterStep
+	@AfterStep(order=1)
     public void afterStep(Scenario scenario) {
         if (scenario.isFailed()) {
             // Take screenshot and attach to report
             byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
             scenario.attach(screenshot, "image/png", scenario.getName());
+            
         }
-    }
-	
-	@AfterAll
-    public static void generateAllureReport() {
-//        try {
-//            // Ensure the allure-results directory exists
-//        	 File directory = new File(System.getProperty("user.dir") + "/target/allure-results");
-//             if (!directory.exists()) {
-//                 directory.mkdirs();
-//             }
-
-            // Generate Allure report
-		try {
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            String command;
-            
-            if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                command = "cmd.exe /c allure generate --single-file target/allure-results -o target/allure-reports --clean";
-            } else {
-                command = "sh -c allure generate --single-file target/allure-results -o target/allure-reports --clean";
-            }
-            
-            processBuilder.command(command.split(" "));
-            processBuilder.inheritIO();
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-            
-            if (exitCode != 0) {
-                System.err.println("Allure report generation failed with exit code: " + exitCode);
-            } else {
-                System.out.println("Allure report generated successfully at: " + 
-                    Paths.get("allure-report", "index.html").toAbsolutePath());
-            }
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Failed to generate Allure report: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+	}
 
 }

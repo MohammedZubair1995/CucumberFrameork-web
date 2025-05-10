@@ -1,0 +1,134 @@
+package utils;
+import io.cucumber.java.*;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.regex.*;
+import java.util.stream.Collectors;
+
+public class ReportingHooks {
+	private static final ThreadLocal<Map<String, String>> PARAMETERS = 
+            ThreadLocal.withInitial(LinkedHashMap::new);
+        
+    @AfterStep(order=2)
+    public void captureScenarioParameters(Scenario scenario) {
+        PARAMETERS.get().clear();
+        
+       
+        scenario.getSourceTagNames().stream()
+            .filter(tag -> tag.startsWith("@param:"))
+            .map(tag -> tag.substring(7).split("=", 2))
+            .forEach(parts -> PARAMETERS.get().put(parts[0], parts.length > 1 ? parts[1] : ""));
+        
+        
+        captureFromScenarioText(scenario);
+    }
+
+    private void captureFromScenarioText(Scenario scenario) {
+        String scenarioText = getScenarioText(scenario);
+        
+       
+        Pattern pattern = Pattern.compile("[\"<]([^\"<>]+)[\">]");
+        Matcher matcher = pattern.matcher(scenarioText);
+        
+        while (matcher.find()) {
+            String param = matcher.group(1).trim();
+            if (!param.isEmpty()) {
+                PARAMETERS.get().put("arg_" + param, "[runtime_value]");
+            }
+        }
+        
+        
+        captureFromScenarioName(scenario.getName());
+        
+       
+        if (scenario.getSourceTagNames().contains("@")) {
+            captureDataTableParameters(scenarioText);
+        }
+    }
+    
+    private void captureDataTableParameters(String scenarioText) {
+        try {
+            
+            String[] lines = scenarioText.split("\n");
+            
+           
+            List<String> tableRows = Arrays.stream(lines)
+                .filter(line -> line.trim().startsWith("|"))
+                .collect(Collectors.toList());
+            
+            if (!tableRows.isEmpty()) {
+               
+                String[] headers = tableRows.get(0).split("\\|");
+                
+               
+                for (int i = 1; i < tableRows.size(); i++) {
+                    String[] values = tableRows.get(i).split("\\|");
+                    for (int j = 1; j < headers.length && j < values.length; j++) {
+                        String header = headers[j].trim();
+                        String value = values[j].trim();
+                        if (!header.isEmpty()) {
+                            PARAMETERS.get().put("table_" + header + "_row" + i, 
+                                value.isEmpty() ? "[empty]" : value);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error capturing data table parameters: " + e.getMessage());
+        }
+    }
+    
+    private void captureFromScenarioName(String scenarioName) {
+        Pattern pattern = Pattern.compile("[\\[(]([^\\]\\)]+)[\\]\\)]");
+        Matcher matcher = pattern.matcher(scenarioName);
+        
+        if (matcher.find()) {
+            String paramsString = matcher.group(1);
+            Arrays.stream(paramsString.split("[,;]"))
+                .map(param -> param.split("[:=]"))
+                .forEach(parts -> {
+                    String key = parts[0].trim();
+                    String value = parts.length > 1 ? parts[1].trim() : "";
+                    if (!key.isEmpty()) {
+                        PARAMETERS.get().put("name_" + key, value);
+                    }
+                });
+        }
+    }
+    
+    private String getScenarioText(Scenario scenario) {
+        
+        return scenario.toString();
+    }
+    
+    @AfterAll
+    public static void generateAllureReport() {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            String command;
+            
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                command = "cmd.exe /c allure generate --single-file target/allure-results -o target/allure-reports --clean";
+            } else {
+                command = "sh -c allure generate --single-file target/allure-results -o target/allure-reports --clean";
+            }
+            
+            processBuilder.command(command.split(" "));
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+            
+            if (exitCode != 0) {
+                System.err.println("Allure report generation failed with exit code: " + exitCode);
+            } else {
+                System.out.println("Allure report generated successfully at: " + 
+                    Paths.get("allure-report", "index.html").toAbsolutePath());
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Failed to generate Allure report: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+ }
