@@ -169,11 +169,12 @@ public class ReportingHooks {
     
     public static void AllureEnvironmentUtils() {
     	
+    	String environment = MyHook.getProperties().getProperty("env");
     	Map<String, String> envData = new HashMap<>();
         envData.put("OS", System.getProperty("os.name"));
         envData.put("Java Version", System.getProperty("java.version"));
         envData.put("User", System.getProperty("user.name"));
-        envData.put("Environment", "QA");      // e.g., QA/Staging/Production
+        envData.put("Environment", environment);      // e.g., QA/Staging/Production
         
         StringBuilder propertiesContent = new StringBuilder();
         for (Map.Entry<String, String> entry : envData.entrySet()) {
