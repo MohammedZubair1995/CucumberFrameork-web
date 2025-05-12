@@ -1,7 +1,10 @@
 package utils;
 import io.cucumber.java.*;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.*;
@@ -106,6 +109,13 @@ public class ReportingHooks {
     @AfterAll
     public static void generateAllureReport() {
         try {
+        	
+        	String allureResultsDir = System.getProperty("user.dir") + File.separator + "target" + File.separator + "allure-results";
+            Files.createDirectories(Paths.get(allureResultsDir));
+            
+            generateAllureCategories();
+            AllureEnvironmentUtils();
+            
             ProcessBuilder processBuilder = new ProcessBuilder();
             String command;
             
@@ -129,6 +139,57 @@ public class ReportingHooks {
         } catch (IOException | InterruptedException e) {
             System.err.println("Failed to generate Allure report: " + e.getMessage());
             e.printStackTrace();
+        }
+        
+        
+    }
+    
+    public static void generateAllureCategories() {
+    	
+    	String jsonContent = "["
+                + "{\"name\":\"Test Passed\",\"matchedStatuses\":[\"passed\"]},"
+                + "{\"name\":\"Test Failed\",\"matchedStatuses\":[\"failed\"]},"
+                + "{\"name\":\"Test Skipped\",\"matchedStatuses\":[\"skipped\"]},"
+                + "{\"name\":\"Unknown\",\"matchedStatuses\":[\"broken\",\"unknown\"]}"
+                + "]";
+    	 
+    	 String projectDir = System.getProperty("user.dir");
+         String allureResultsDir = projectDir + File.separator + "target" + File.separator + "allure-results";
+         String filePath = allureResultsDir + File.separator + "categories.json";
+
+         try {
+            
+             try (FileWriter writer = new FileWriter(filePath)) {
+                 writer.write(jsonContent);
+             }
+         } catch (IOException e) {
+             System.err.println("Failed to generate Allure categories.json: " + e.getMessage());
+         }
+    }
+    
+    public static void AllureEnvironmentUtils() {
+    	
+    	Map<String, String> envData = new HashMap<>();
+        envData.put("OS", System.getProperty("os.name"));
+        envData.put("Java Version", System.getProperty("java.version"));
+        envData.put("User", System.getProperty("user.name"));
+        envData.put("Environment", "QA");      // e.g., QA/Staging/Production
+        
+        StringBuilder propertiesContent = new StringBuilder();
+        for (Map.Entry<String, String> entry : envData.entrySet()) {
+            propertiesContent.append(String.format("%s=%s%n", entry.getKey(), entry.getValue()));
+        }
+        
+        String projectDir = System.getProperty("user.dir");
+        String allureResultsDir = projectDir + File.separator + "target" + File.separator + "allure-results";
+        String filePath = allureResultsDir + File.separator + "environment.properties";
+        
+        try (FileWriter writer = new FileWriter(filePath)) {
+            writer.write(propertiesContent.toString());
+            System.out.println("Allure environment.properties generated at: " + filePath);
+        }
+        catch (IOException e) {
+        System.err.println("Failed to create environment.properties: " + e.getMessage());
         }
     }
  }
