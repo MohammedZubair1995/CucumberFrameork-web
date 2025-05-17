@@ -42,9 +42,9 @@ public class MyHook {
 //		Allure.parameter("Headless mode", headless.toString());
 //		Allure.link(properties.getProperty("url"));
 		
-		Allure.addAttachment("Browser Launched", "text/plain",browser );
-		Allure.addAttachment("Browser launched in headless mode", "text/plain",headless.toString() );
-		Allure.addAttachment("Application", "text/html", "<a href='"+properties.getProperty("url")+"'>Application</a>");
+//		Allure.addAttachment("Browser Launched", "text/plain",browser );
+//		Allure.addAttachment("Browser launched in headless mode", "text/plain",headless.toString() );
+//		Allure.addAttachment("Application", "text/html", "<a href='"+properties.getProperty("url")+"'>Application</a>");
 		
 		
 		

@@ -170,11 +170,22 @@ public class ReportingHooks {
     public static void AllureEnvironmentUtils() {
     	
     	String environment = MyHook.getProperties().getProperty("env");
+    	String browser = MyHook.getProperties().getProperty("browser");
+    	String headless = MyHook.getProperties().getProperty("headless");
+    	String url = MyHook.getProperties().getProperty("url");
+    	if (browser.equalsIgnoreCase("safari"))
+    		headless = "false";
+    	if(!headless.equalsIgnoreCase("true"))
+    		headless = "false";
     	Map<String, String> envData = new HashMap<>();
         envData.put("OS", System.getProperty("os.name"));
-        envData.put("Java Version", System.getProperty("java.version"));
-        envData.put("User", System.getProperty("user.name"));
+   //     envData.put("Java Version", System.getProperty("java.version"));
+   //     envData.put("User", System.getProperty("user.name"));
         envData.put("Environment", environment);      // e.g., QA/Staging/Production
+        envData.put("Browser", browser);
+        envData.put("Headless", headless);
+        envData.put("Application", url);
+        
         
         StringBuilder propertiesContent = new StringBuilder();
         for (Map.Entry<String, String> entry : envData.entrySet()) {
@@ -187,7 +198,6 @@ public class ReportingHooks {
         
         try (FileWriter writer = new FileWriter(filePath)) {
             writer.write(propertiesContent.toString());
-            System.out.println("Allure environment.properties generated at: " + filePath);
         }
         catch (IOException e) {
         System.err.println("Failed to create environment.properties: " + e.getMessage());

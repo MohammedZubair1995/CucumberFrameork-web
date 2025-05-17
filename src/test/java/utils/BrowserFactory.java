@@ -1,8 +1,11 @@
 package utils;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -11,6 +14,10 @@ import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.safari.SafariOptions;
+
+import io.qameta.allure.Allure;
 
 public class BrowserFactory {
 	
@@ -79,6 +86,78 @@ public class BrowserFactory {
                 edgeOptions.addArguments("--headless=new");
             }
             driver = new EdgeDriver(edgeOptions);
+            break;
+            
+        case "safari":
+            SafariOptions safariOptions = new SafariOptions();
+            safariOptions.setCapability("safari:automaticInspection", true);
+            safariOptions.setCapability("safari:automaticProfiling", true);
+
+           
+            if (headless) {
+                Allure.addAttachment("Safari Browser Warning", 
+                    "text/plain", 
+                    "Safari browser launched in normal mode since it doesn't support headless mode");
+            }
+
+            driver = new SafariDriver(safariOptions) {
+                private final String defaultDownloadPath = System.getProperty("user.home") + "/Downloads/";
+                private final String targetDownloadPath = downloadPath;
+
+                @Override
+                public void get(String url) {
+                    
+                    if (url.startsWith("http") && (url.endsWith(".pdf") || url.endsWith(".txt") || url.endsWith(".csv") || 
+                                                 url.endsWith(".xlsx") || url.endsWith(".zip"))) {
+                        handleDownload(url);
+                    } else {
+                        super.get(url);
+                    }
+                }
+
+                private void handleDownload(String fileUrl) {
+                    String fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+                    
+                   
+                    ((JavascriptExecutor) this).executeScript(
+                        "var link = document.createElement('a');" +
+                        "link.href = arguments[0];" +
+                        "link.download = arguments[1];" +
+                        "document.body.appendChild(link);" +
+                        "link.click();" +
+                        "document.body.removeChild(link);", 
+                        fileUrl, fileName);
+
+                    waitAndMoveFile(fileName);
+                }
+
+                private void waitAndMoveFile(String fileName) {
+                    File source = new File(defaultDownloadPath + fileName);
+                    File target = new File(targetDownloadPath + fileName);
+                    
+                    int attempts = 0;
+                    while (attempts++ < 30) { // Wait up to 30 seconds
+                        try {
+                            if (source.exists()) {
+                                Files.move(source.toPath(), target.toPath(), 
+                                          StandardCopyOption.REPLACE_EXISTING);
+                                Allure.addAttachment("File Downloaded", 
+                                    "text/plain", 
+                                    "Moved file from " + source + " to " + target);
+                                return;
+                            }
+                            Thread.sleep(1000);
+                        } catch (Exception e) {
+                            Allure.addAttachment("Download Warning", 
+                                "text/plain", 
+                                "Error moving file: " + e.getMessage());
+                        }
+                    }
+                    Allure.addAttachment("Download Timeout", 
+                        "text/plain", 
+                        "File not found after 30 seconds: " + source);
+                }
+            };
             break;
             
         default:
