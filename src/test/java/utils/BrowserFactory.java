@@ -1,9 +1,13 @@
 package utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -22,19 +26,25 @@ import io.qameta.allure.Allure;
 public class BrowserFactory {
 	
 	private static void ensureDownloadDirectoryExists(String path) {
-        File directory = new File(path);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-        
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (!file.isDirectory()) {
-                    file.delete();
-                }
-            }
-        }
+		 try {
+		        Path directory = Paths.get(path);
+		        if (!Files.exists(directory)) {
+		            Files.createDirectories(directory);
+		        }
+		        
+		        try (Stream<Path> files = Files.list(directory)) {
+		            files.filter(Files::isRegularFile)
+		                 .forEach(file -> {
+		                     try {
+		                         Files.delete(file);
+		                     } catch (IOException e) {
+		                         System.err.println("Failed to delete file: " + file + " - " + e.getMessage());
+		                     }
+		                 });
+		        }
+		    } catch (IOException e) {
+		        throw new RuntimeException("Failed to setup download directory", e);
+		    }
     }
 	
 	public static WebDriver createDriver(String browserType, boolean runHeadless) {

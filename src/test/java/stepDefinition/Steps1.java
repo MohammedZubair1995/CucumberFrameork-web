@@ -2,7 +2,7 @@ package stepDefinition;
 
 import io.cucumber.java.en.*;
 
-public class MySteps {
+public class Steps1 {
 	
 	@Given("This is a given method")
 	public void givenMethod() {

@@ -1,7 +1,6 @@
 package utils;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -26,18 +25,23 @@ public class TestHooks {
 	private String targetBrowser;
 	private Boolean isHeadlessMode;
 	
-	 static {
-	        // Load config files once at class loading
+	static {
+	    // Load config files once at class loading
+	    synchronized (TestHooks.class) {
 	        try {
 	            configProperties = new Properties();
-	            configProperties.load(new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/config.properties"));
-	            
 	            locators = new Properties();
-	            locators.load(new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/locators.properties"));
+	            
+	            try (FileInputStream configInput = new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/config.properties");
+	                 FileInputStream locatorsInput = new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/locators.properties")) {
+	                configProperties.load(configInput);
+	                locators.load(locatorsInput);
+	            }
 	        } catch (IOException e) {
 	            throw new RuntimeException("Failed to load properties files", e);
 	        }
 	    }
+	}
 	
 	@Before(order =2)
 	public void initializeBrowser() throws IOException {
@@ -59,31 +63,31 @@ public class TestHooks {
 	 @Before(order =1)
 	    public void connection() throws IOException {
 		 
-		 URL link = URI.create(configProperties.getProperty("url")).toURL(); 
-				 
-	    	HttpURLConnection connect = (HttpURLConnection) link.openConnection();
-	    	//connect.connect();
-	    	int responsecode = connect.getResponseCode();
-	    	String responsemessage = connect.getResponseMessage();
-	    	if (responsecode>=400) {
-	    		String errorMessage = "The URL: "+configProperties.getProperty("url")+ " cannot be rached. Recieved status code: "+responsecode+" and response message as: "+responsemessage;
-	    		
-	    		Allure.description(errorMessage);
-	            Allure.addAttachment("Connection Failure", "text/plain", errorMessage);
-	            
-	            Allure.step("URL Connection Failed", () -> {
-	                throw new AssertionError(errorMessage);
-	            });
-	    		
-	    		System.exit(1);
-	    	} 
+		 try {
+		        URL link = URI.create(configProperties.getProperty("url")).toURL();
+		        HttpURLConnection connect = (HttpURLConnection) link.openConnection();
+		        connect.setConnectTimeout(5000);
+		        connect.setReadTimeout(5000);
+		        int responsecode = connect.getResponseCode();
+		        
+		        if (responsecode >= 400) {
+		            String errorMessage = "The URL: "+configProperties.getProperty("url")+ 
+		                " cannot be reached. Received status code: "+responsecode;
+		            
+		            Allure.description(errorMessage);
+		            Allure.addAttachment("Connection Failure", "text/plain", errorMessage);
+		            throw new RuntimeException(errorMessage);
+		        }
+		    } catch (IOException e) {
+		        throw new RuntimeException("Failed to check URL connection", e);
+		    }
 	    }
 
-	public WebDriver getDriver() {
+	public static WebDriver getDriver() {
 		return driverThreadLocal.get();
 	}
 	
-	public static Properties getXpaths() {
+	public static Properties getLocators() {
 		return locators;
 	}
 	
