@@ -37,13 +37,13 @@ public class BrowserFactory {
         }
     }
 	
-	public static WebDriver createDriver(String browser, boolean headless) {
+	public static WebDriver createDriver(String browserType, boolean runHeadless) {
 		
         WebDriver driver;
         String downloadPath = System.getProperty("user.dir") + "/target/Downloads";
         ensureDownloadDirectoryExists(downloadPath);
 		
-        switch (browser.toLowerCase()) {
+        switch (browserType.toLowerCase()) {
         case "chrome":
             ChromeOptions chromeOptions = new ChromeOptions();
             HashMap<String, Object> chromePrefs = new HashMap<>();
@@ -52,7 +52,7 @@ public class BrowserFactory {
             chromePrefs.put("download.directory_upgrade", true);
             
             chromeOptions.setExperimentalOption("prefs", chromePrefs);
-            if (headless) {
+            if (runHeadless) {
                 chromeOptions.addArguments("--headless=new");
             }
             driver = new ChromeDriver(chromeOptions);
@@ -68,7 +68,7 @@ public class BrowserFactory {
             profile.setPreference("browser.helperApps.neverAsk.saveToDisk", 
                 "application/pdf,application/octet-stream,application/vnd.ms-excel");
             firefoxOptions.setProfile(profile);
-            if (headless) {
+            if (runHeadless) {
                 firefoxOptions.addArguments("--headless");
             }
             driver = new FirefoxDriver(firefoxOptions);
@@ -82,7 +82,7 @@ public class BrowserFactory {
             edgePrefs.put("download.prompt_for_download", false);
             edgePrefs.put("download.directory_upgrade", true);
             edgeOptions.setExperimentalOption("prefs", edgePrefs);
-            if (headless) {
+            if (runHeadless) {
                 edgeOptions.addArguments("--headless=new");
             }
             driver = new EdgeDriver(edgeOptions);
@@ -94,7 +94,7 @@ public class BrowserFactory {
             safariOptions.setCapability("safari:automaticProfiling", true);
 
            
-            if (headless) {
+            if (runHeadless) {
                 Allure.addAttachment("Safari Browser Warning", 
                     "text/plain", 
                     "Safari browser launched in normal mode since it doesn't support headless mode");
@@ -161,7 +161,7 @@ public class BrowserFactory {
             break;
             
         default:
-            throw new IllegalArgumentException("Unsupported browser: " + browser);
+            throw new IllegalArgumentException("Unsupported browser: " + browserType);
    
 		
 		

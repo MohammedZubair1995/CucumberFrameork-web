@@ -1,5 +1,5 @@
 #Severity. Allowed values are: “trivial”, “minor”, “normal”, “critical”, and “blocker”.
-@tag
+@Feature_Name
 
 Feature: Title of your feature
   I want to use this template for my feature file
@@ -7,7 +7,7 @@ Feature: Title of your feature
 Background:
 	  Given This is background step
 	  
-  @tag1 
+  @TC1 
   @allure.label.owner=john 
   @minor
   Scenario: This is to showcse scenario structure
@@ -17,7 +17,7 @@ Background:
     But This is a but method
     Then This is a then method
     
-   @tag2
+   @TC2
    @trivial
    @allure.label.owner=john 
  Scenario: Data table scenario
@@ -27,19 +27,19 @@ Background:
 		|Admin| |
 		|Admin|Admin123|
 		
-		@tag3
+		@TC3
 		@normal
 		@allure.label.owner=john 
 	Scenario: Failed test case
 		Given Failed test case
 		
-		@tag4
+		@TC4
 		@critical
 		@allure.label.owner=john 
 		Scenario: Data passed as string
 		Given This is "Data" steps
 		
-		@tag5
+		@TC5
 		@blocker
 		@allure.label.owner=john 
 		Scenario Outline: This is scenario line

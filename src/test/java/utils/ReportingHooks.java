@@ -4,11 +4,18 @@ import io.cucumber.java.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ReportingHooks {
 	private static final ThreadLocal<Map<String, String>> PARAMETERS = 
@@ -109,7 +116,8 @@ public class ReportingHooks {
     @AfterAll
     public static void generateAllureReport() {
         try {
-        	
+        	String CUSTOM_LOGO_PATH = System.getProperty("user.dir") + "/src/test/resources/CustomLogo.png";
+        	String CUSTOM_TITLE = TestHooks.getProperties().getProperty("app");
         	String allureResultsDir = System.getProperty("user.dir") + File.separator + "target" + File.separator + "allure-results";
             Files.createDirectories(Paths.get(allureResultsDir));
             
@@ -133,9 +141,28 @@ public class ReportingHooks {
             if (exitCode != 0) {
                 System.err.println("Allure report generation failed with exit code: " + exitCode);
             } else {
+            	Path reportPath = Paths.get(
+                        System.getProperty("user.dir"), 
+                        "target", 
+                        "allure-reports",
+                        "index.html"
+                    );
+            	
+            	String htmlContent = Files.readString(reportPath, StandardCharsets.UTF_8);
+            	if (!htmlContent.contains(CUSTOM_TITLE)) {
+                    htmlContent = htmlContent.replaceAll(
+                        "(?i)<title[^>]*>.*?</title>",
+                        "<title>"+CUSTOM_TITLE+"</title>"
+                    );
+                }
+            	Files.write(reportPath, htmlContent.getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.TRUNCATE_EXISTING);
+            	
+            	
                 System.out.println("Allure report generated successfully at: " + 
                     Paths.get("allure-report", "index.html").toAbsolutePath());
             }
+            
         } catch (IOException | InterruptedException e) {
             System.err.println("Failed to generate Allure report: " + e.getMessage());
             e.printStackTrace();
@@ -169,10 +196,10 @@ public class ReportingHooks {
     
     public static void AllureEnvironmentUtils() {
     	
-    	String environment = MyHook.getProperties().getProperty("env");
-    	String browser = MyHook.getProperties().getProperty("browser");
-    	String headless = MyHook.getProperties().getProperty("headless");
-    	String url = MyHook.getProperties().getProperty("url");
+    	String environment = TestHooks.getProperties().getProperty("env");
+    	String browser = TestHooks.getProperties().getProperty("browser");
+    	String headless = TestHooks.getProperties().getProperty("headless");
+    	String url = TestHooks.getProperties().getProperty("url");
     	if (browser.equalsIgnoreCase("safari"))
     		headless = "false";
     	if(!headless.equalsIgnoreCase("true"))
