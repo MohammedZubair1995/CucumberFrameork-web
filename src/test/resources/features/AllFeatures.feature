@@ -24,7 +24,7 @@ Background:
 		Given Login using <username> and <password>
 		|username|password|
 		|Admin|Admin|
-		|Admin| |
+		|user|password|
 		|Admin|Admin123|
 		
 		@TC3

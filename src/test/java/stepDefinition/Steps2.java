@@ -1,32 +1,27 @@
 package stepDefinition;
 
 import java.util.List;
-
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.testng.Assert;
 
+import actions.LoginPageActions;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
 import utils.TestHooks;
 
 public class Steps2 {
-private final WebDriver driver;
-    
-    public Steps2() {
-        this.driver = TestHooks.getDriver();
-    }
 	
+	LoginPageActions lpa = new LoginPageActions(TestHooks.getDriver());
 	@Given("Login using <username> and <password>")
 	public void givenMethod(DataTable dataTable){
 		
 		List<List<String>> rows = dataTable.asLists(String.class);
 	    
 	    for (List<String> row : rows) {
-	        String username = row.get(0); // First column
-	        String password = row.get(1); // Second column
-	        driver.findElement(By.xpath(TestHooks.getLocators().getProperty("username"))).sendKeys(username);
+	        String username = row.get(0); 
+	        String password = row.get(1);
 	        System.out.println("Username: " + username + ", Password: " + password);
+	        lpa.enterUsername(username);
+	        lpa.enterPassword(password);
 	    }
 	    
 	}

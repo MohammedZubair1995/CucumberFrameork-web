@@ -30,13 +30,10 @@ public class TestHooks {
 	    synchronized (TestHooks.class) {
 	        try {
 	            configProperties = new Properties();
-	            locators = new Properties();
 	            
-	            try (FileInputStream configInput = new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/config.properties");
-	                 FileInputStream locatorsInput = new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/locators.properties")) {
+	            FileInputStream configInput = new FileInputStream(System.getProperty("user.dir") + "/src/test/resources/config.properties");
 	                configProperties.load(configInput);
-	                locators.load(locatorsInput);
-	            }
+	                
 	        } catch (IOException e) {
 	            throw new RuntimeException("Failed to load properties files", e);
 	        }
