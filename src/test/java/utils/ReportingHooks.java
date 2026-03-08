@@ -33,9 +33,9 @@ public class ReportingHooks {
             String command;
             
             if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                command = "cmd.exe /c allure generate --single-file target/allure-results -o target/allure-reports --clean";
+                command = "cmd.exe /c allure generate --single-file target/allure-results -o target/allure-reports --clean --report-name "+CUSTOM_TITLE+"\"";
             } else {
-                command = "sh -c allure generate --single-file target/allure-results -o target/allure-reports --clean";
+                command = "sh -c allure generate --single-file target/allure-results -o target/allure-reports --clean --report-name "+CUSTOM_TITLE+"\"";
             }
             
             processBuilder.command(command.split(" "));
@@ -136,4 +136,5 @@ public class ReportingHooks {
         System.err.println("Failed to create environment.properties: " + e.getMessage());
         }
     }
+
  }
